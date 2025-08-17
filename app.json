@@ -1,0 +1,18 @@
+{
+  "name": "Data Analyst Agent API",
+  "description": "Cost-free intelligent data analysis API with visualization generation",
+  "repository": "https://github.com/yourusername/data-analyst-agent",
+  "keywords": ["flask", "data-analysis", "api", "visualization", "cost-free"],
+  "env": {
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  }
+}

@@ -1,6 +1,6 @@
-# Running Data Analyst Agent Locally
+# Data Analyst Agent - Local Setup & Deployment Guide
 
-This guide will help you run the cost-free Data Analyst Agent on your local PC.
+This guide covers running the cost-free Data Analyst Agent locally and deploying it publicly via GitHub and Render.
 
 ## Prerequisites
 
@@ -172,5 +172,210 @@ This system provides enterprise-level data analysis capabilities without:
 - External service dependencies
 - Complex infrastructure requirements
 - Ongoing subscription fees
+
+Perfect for local development, testing, and cost-sensitive production environments.
+
+---
+
+# GitHub & Render Deployment
+
+## Part 1: Prepare for GitHub
+
+### 1. Create Deployment Files
+
+Create these additional files in your project root:
+
+**`runtime.txt`** (specify Python version):
+```
+python-3.11.0
+```
+
+**`Procfile`** (for Render deployment):
+```
+web: gunicorn --bind 0.0.0.0:$PORT main:app
+```
+
+**`.gitignore`**:
+```
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.env
+instance/
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+*.log
+```
+
+**`app.json`** (for easy deployment):
+```json
+{
+  "name": "Data Analyst Agent API",
+  "description": "Cost-free intelligent data analysis API with visualization generation",
+  "repository": "https://github.com/yourusername/data-analyst-agent",
+  "keywords": ["flask", "data-analysis", "api", "visualization", "cost-free"],
+  "env": {
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  }
+}
+```
+
+### 2. Update main.py for Production
+
+Modify `main.py` to handle port configuration:
+
+```python
+import os
+from app import app
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
+```
+
+### 3. Add gunicorn to dependencies
+
+Update your `local-requirements.txt` to include:
+```
+Flask==2.3.3
+pandas==2.1.1
+numpy==1.24.3
+matplotlib==3.7.2
+requests==2.31.0
+trafilatura==1.6.2
+duckdb==0.8.1
+scikit-learn==1.3.0
+beautifulsoup4==4.12.2
+Werkzeug==2.3.7
+gunicorn==21.2.0
+```
+
+## Part 2: Deploy to GitHub
+
+### 1. Initialize Git Repository
+```bash
+git init
+git add .
+git commit -m "Initial commit: Data Analyst Agent API"
+```
+
+### 2. Create GitHub Repository
+1. Go to GitHub.com
+2. Click "New Repository"
+3. Name it `data-analyst-agent` (or your preferred name)
+4. Don't initialize with README (you already have files)
+5. Click "Create Repository"
+
+### 3. Push to GitHub
+```bash
+git remote add origin https://github.com/yourusername/data-analyst-agent.git
+git branch -M main
+git push -u origin main
+```
+
+## Part 3: Deploy to Render
+
+### 1. Connect GitHub to Render
+1. Go to [render.com](https://render.com)
+2. Sign up/login
+3. Click "New +" → "Web Service"
+4. Connect your GitHub account
+5. Select your `data-analyst-agent` repository
+
+### 2. Configure Render Deployment
+**Build Settings:**
+- **Environment**: Python 3
+- **Build Command**: `pip install -r local-requirements.txt`
+- **Start Command**: `gunicorn --bind 0.0.0.0:$PORT main:app`
+
+**Environment Variables:**
+- `FLASK_ENV`: `production`
+- `PYTHON_VERSION`: `3.11.0`
+
+### 3. Deploy
+1. Click "Create Web Service"
+2. Render will automatically build and deploy
+3. You'll get a public URL like: `https://your-app-name.onrender.com`
+
+## Part 4: Test Public Deployment
+
+### Test the deployed API:
+```bash
+# Test health check
+curl https://your-app-name.onrender.com/
+
+# Test analysis endpoint
+curl -X POST https://your-app-name.onrender.com/api/ \
+  -F "questions.txt=@questions.txt" \
+  -F "data.csv=@data.csv"
+```
+
+## Part 5: GitHub Repository Structure
+
+Your final repository should look like:
+```
+data-analyst-agent/
+├── app.py                    # Flask application
+├── data_analyzer.py          # Core analysis engine  
+├── main.py                   # Entry point
+├── local-requirements.txt    # Dependencies
+├── runtime.txt              # Python version
+├── Procfile                 # Render deployment config
+├── app.json                 # Deployment metadata
+├── .gitignore              # Git ignore rules
+├── LOCAL_SETUP.md          # This documentation
+├── README.md               # Project description
+└── LICENSE                 # License file
+```
+
+## Part 6: Maintenance & Updates
+
+### Update Deployment:
+```bash
+# Make changes to your code
+git add .
+git commit -m "Update: description of changes"
+git push origin main
+```
+
+Render will automatically redeploy when you push to GitHub.
+
+### Monitor Deployment:
+- Check Render dashboard for logs and metrics
+- Monitor API performance and usage
+- Set up alerts for downtime
+
+## Benefits of This Deployment
+
+✅ **Free Hosting**: Render free tier supports this lightweight API  
+✅ **Automatic Deployments**: Updates via GitHub push  
+✅ **Public Access**: Anyone can use your API  
+✅ **Scalable**: Can upgrade Render plan if needed  
+✅ **Cost-Free Operation**: No ongoing API costs  
+✅ **Professional URL**: Custom domain support available  
+
+## API Documentation for Users
+
+Once deployed, users can access:
+- **Health Check**: `GET https://your-app.onrender.com/`
+- **Data Analysis**: `POST https://your-app.onrender.com/api/`
+
+The API accepts multipart form data with text files (questions) and data files (CSV/JSON/Parquet) and returns intelligent analysis with visualizations.
 
 Perfect for local development, testing, and cost-sensitive production environments.
