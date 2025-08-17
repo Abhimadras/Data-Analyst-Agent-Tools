@@ -1,0 +1,208 @@
+📌 Project Description
+
+Create a Flask-based API that acts as a Data Analyst Agent. The agent must accept a POST request at /api/, with:
+
+A required text file (this is the "questions file") that contains natural language questions.
+⚠️ The file might not necessarily be named questions.txt — it can have any name but will always be a .txt file.
+
+Zero or more optional files (CSV, JSON, Parquet, PNG, JPG, etc.).
+
+The agent must:
+
+Detect and parse the .txt file, regardless of its name.
+
+Optionally load & preprocess any uploaded datasets.
+
+Use an LLM (OpenAI GPT-4o-mini) to interpret the questions.
+
+Perform data sourcing (via requests/BeautifulSoup/duckdb/pandas as needed).
+
+Execute data analysis with Python (pandas, numpy, scikit-learn, duckdb).
+
+Generate visualizations (matplotlib) and return them as base64-encoded images under 100 KB.
+
+Return answers in the exact format requested by the question (JSON object or JSON array).
+
+📌 API Behavior
+
+Endpoint: POST /api/
+
+Accepts multipart form-data:
+
+curl "https://app.example.com/api/" \
+  -F "myquestions.txt=@myquestions.txt" \
+  -F "data.csv=@data.csv" \
+  -F "image.png=@image.png"
+
+
+Must detect whichever .txt file is present and treat it as the questions input.
+
+Always return JSON (array or object).
+
+Must always respond within 3 minutes (fail safe: if analysis fails, return "error": "...reason..." in correct structure).
+
+Routes:
+
+/ → health check (returns JSON: { "status": "ok" })
+
+/api/ → main analysis
+
+📌 File Handling
+
+Detect the first .txt file in request.files → treat it as the questions file (regardless of its name).
+
+Save it as questions.txt internally for consistency.
+
+Save all uploaded files temporarily using tempfile.
+
+Convert CSV/JSON/Parquet into cleaned pandas DataFrames.
+
+Coerce numeric-like columns into proper floats/ints.
+
+Pass questions_content and uploaded_files dict into the analyzer.
+
+📌 Core Logic
+
+Create a DataAnalyzer class:
+
+analyze(questions: str, files: dict) -> dict|list
+
+Steps:
+
+Parse questions (split by line).
+
+Use heuristics + GPT-4 to decide:
+
+If it’s a scraping task, fetch data.
+
+If it’s a data analysis task, load provided files.
+
+Perform computations (e.g., regression, correlation).
+
+Generate required plots.
+
+Encode plots as base64 strings.
+
+Return JSON response.
+
+📌 Visualization Requirements
+
+Use matplotlib (not seaborn).
+
+Example: scatterplot with dotted red regression line.
+
+Encode plots as:
+
+buf = io.BytesIO()
+plt.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+buf.seek(0)
+encoded = base64.b64encode(buf.read()).decode("utf-8")
+image_uri = f"data:image/png;base64,{encoded}"
+
+
+Ensure size < 100KB.
+
+📌 Error Handling
+
+Return structured JSON errors:
+
+{ "error": "Analysis failed: <reason>" }
+
+
+Handle missing files, bad data, timeouts.
+
+📌 Deployment
+
+Containerize with Dockerfile (Flask + Gunicorn).
+
+Add requirements.txt.
+
+Deploy to Render or Railway (free tier).
+
+Expose endpoint at: https://<appname>.onrender.com/api/
+
+📌 GitHub Setup
+
+Create a public GitHub repository.
+
+Include:
+
+app.py
+
+data_analyzer.py
+
+requirements.txt
+
+Dockerfile
+
+README.md (with setup & usage guide)
+
+LICENSE (MIT License)
+
+README should have:
+
+Project overview
+
+API usage with curl examples
+
+Deployment guide
+
+License section
+
+📌 Testing
+
+Add a tests/test_api.py file using pytest with:
+
+Test / returns 200 OK JSON.
+
+Test /api/ with mock .txt questions file and CSV returns valid JSON.
+
+Ensure tests pass locally.
+
+📌 Libraries to Use
+
+Flask
+
+pandas
+
+numpy
+
+matplotlib
+
+scikit-learn
+
+requests
+
+beautifulsoup4
+
+duckdb
+
+python-dotenv
+
+gunicorn
+
+📌 Expected Deliverables
+
+Generate the entire working codebase, including:
+
+app.py (Flask API that detects .txt file regardless of name, saves as questions.txt)
+
+data_analyzer.py (core logic with GPT + pandas/duckdb/matplotlib)
+
+requirements.txt
+
+Dockerfile
+
+README.md
+
+LICENSE (MIT)
+
+tests/test_api.py
+
+Everything should be runnable in one go with:
+
+pip install -r requirements.txt
+python app.py
+
+
+Deployment-ready on Render/Railway.
